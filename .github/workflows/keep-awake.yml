@@ -1,0 +1,44 @@
+name: Keep the free tiers awake
+
+# Supabase pauses a free project after ~7 days without database activity, and a
+# paused project has to be restored by hand. This runs every 6 days and queries
+# real data through the API, so the database sees genuine traffic - a static
+# endpoint would wake Render without touching Postgres at all, which is exactly
+# the activity Supabase is measuring.
+on:
+  schedule:
+    # Days 1, 7, 13, 19, 25 and 31 of each month: at most 6 days apart.
+    # Deliberately not on the hour - GitHub delays scheduled runs at busy times.
+    - cron: '17 6 */6 * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Query the database through the API
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Wake the API and read museums
+        env:
+          API: https://museum-finder-helsinki-api.onrender.com
+        run: |
+          set -uo pipefail
+
+          # Render's free instance sleeps after 15 minutes idle and takes up to a
+          # minute to boot, so the first attempts are expected to time out.
+          for attempt in $(seq 1 10); do
+            body=$(curl -sS --max-time 90 "$API/api/museums" 2>/dev/null) && \
+            count=$(printf '%s' "$body" | python3 -c "import sys,json;print(len(json.load(sys.stdin)))" 2>/dev/null) || count=""
+
+            if [ -n "$count" ] && [ "$count" -gt 0 ] 2>/dev/null; then
+              echo "OK: read $count museums from the database on attempt $attempt."
+              exit 0
+            fi
+
+            echo "Attempt $attempt did not return museums yet; waiting for the instance to wake."
+            sleep 30
+          done
+
+          echo "::error::Could not read museums after 10 attempts. The API or the database is down,"
+          echo "::error::and Supabase will pause the project if this keeps failing."
+          exit 1
