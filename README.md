@@ -144,7 +144,8 @@ wants, defaulting `sslmode=require`. Set these on the API service:
 | `CORS_ORIGINS` | The frontend's origin, e.g. `https://your-app.vercel.app` |
 | `ANTHROPIC_API_KEY` | Optional; without it the deployed app uses the keyword interpreter |
 
-And on the frontend build: `VITE_API_BASE_URL` = the API's origin.
+And on the frontend build: `VITE_API_BASE_URL` = the API's origin. For the deployed
+setup that lives in `frontend/.env.production`, so the Vercel build needs no dashboard config.
 
 Flyway runs the migrations on first boot, so a fresh database seeds itself.
 
