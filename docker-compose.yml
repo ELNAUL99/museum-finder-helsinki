@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: museumfinder-db
+    environment:
+      POSTGRES_DB: museumfinder
+      POSTGRES_USER: museumfinder
+      POSTGRES_PASSWORD: museumfinder
+    ports:
+      - "5432:5432"
+    volumes:
+      - museumfinder-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U museumfinder -d museumfinder"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  museumfinder-data:
