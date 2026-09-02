@@ -122,7 +122,7 @@ valid JSON schema.
 
 ## Deploying
 
-The backend ships as a Docker image (`backend/Dockerfile`, multi-stage: Maven build → Temurin
+The backend ships as a Docker image (`Dockerfile` at the repo root, multi-stage: Maven build → Temurin
 JRE), so it runs anywhere that takes a container. The frontend is a static bundle.
 
 The deployed setup is a free-tier stack:

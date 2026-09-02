@@ -1,5 +1,0 @@
-target/
-.mvn/wrapper/*.jar
-*.iml
-.idea/
-.DS_Store

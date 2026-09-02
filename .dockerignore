@@ -1,0 +1,9 @@
+# The image only needs backend/pom.xml and backend/src.
+frontend/
+target/
+backend/target/
+.git/
+.mvn/wrapper/*.jar
+*.iml
+.idea/
+.DS_Store
