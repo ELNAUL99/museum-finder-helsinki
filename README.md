@@ -163,6 +163,20 @@ setup that lives in `frontend/.env.production`, so the Vercel build needs no das
 
 Flyway runs the migrations on first boot, so a fresh database seeds itself.
 
+### Keeping the free tiers awake
+
+Supabase pauses a free project after roughly a week without database activity, and restoring one
+is a manual step. `.github/workflows/keep-awake.yml` runs every 6 days and reads museums *through
+the API*, which produces a real Postgres query — pinging a static endpoint would wake Render
+without Supabase seeing anything. It retries around Render's cold start and fails the workflow
+loudly if the chain is genuinely down, so a broken deployment sends you an email rather than
+quietly letting the database pause.
+
+Two things to know about it. GitHub disables scheduled workflows on repositories with no commits
+for 60 days, so a long-dormant repo stops pinging — push anything, or run the workflow manually
+from the Actions tab, to re-arm it. And scheduled runs are best-effort: if you would rather have
+margin against a skipped run, change `*/6` to `*/3` in the cron expression.
+
 No secret belongs in this repo. `.gitignore` blocks `.env*`, `*.pem`, `*.key`, keystores and
 `*credentials*.json`; the only committed env files are the `.env.example` templates and
 `frontend/.env.production`, which holds a public API URL and nothing else. Real values go in the
