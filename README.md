@@ -155,7 +155,7 @@ wants, defaulting `sslmode=require`. Set these on the API service:
 |---|---|
 | `DATABASE_URL` | The Postgres connection URI (use the **session** pooler, not transaction — Flyway needs session-mode) |
 | `JWT_SECRET` | `openssl rand -base64 48` |
-| `CORS_ORIGINS` | The frontend's origin, e.g. `https://your-app.vercel.app` |
+| `CORS_ORIGINS` | The frontend's origin, e.g. `https://your-app.vercel.app` (wildcards allowed for preview URLs) |
 | `ANTHROPIC_API_KEY` or `MISTRAL_API_KEY` | Optional; without either, the deployed app uses the keyword interpreter |
 
 And on the frontend build: `VITE_API_BASE_URL` = the API's origin. For the deployed
@@ -212,7 +212,7 @@ frontend/src/
 | `AI_SEARCH_ENABLED` | `true` | Force the fallback interpreter |
 | `DB_URL` / `DB_USER` / `DB_PASSWORD` | localhost / museumfinder / museumfinder | |
 | `JWT_SECRET` | dev placeholder | **Set this in any real deployment** (32+ chars) |
-| `CORS_ORIGINS` | `http://localhost:5173` | Comma-separated |
+| `CORS_ORIGINS` | `http://localhost:5173` | Comma-separated; `*` wildcards allowed, e.g. `https://my-app-*.vercel.app` for preview deploys |
 
 ## About the data
 
