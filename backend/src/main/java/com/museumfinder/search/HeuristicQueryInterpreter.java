@@ -1,6 +1,8 @@
 package com.museumfinder.search;
 
 import com.museumfinder.domain.Theme;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -20,6 +22,7 @@ import java.util.regex.Pattern;
  * understands "free art museums open on Sunday", just less flexibly.
  */
 @Component
+@Order(Ordered.LOWEST_PRECEDENCE)
 public class HeuristicQueryInterpreter implements QueryInterpreter {
 
     private static final Map<String, Theme> THEME_WORDS = new LinkedHashMap<>();

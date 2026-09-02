@@ -34,14 +34,16 @@ sentence, and the filters get worked out for you.
 
 ## What it does
 
-- **Natural-language search.** A question goes to the Claude Messages API with a JSON schema
-  derived from `SearchFilters`. Claude fills in the schema; the app turns that into a JPA
-  Specification. The model can only produce filters the query layer actually implements.
+- **Natural-language search.** A question goes to an LLM with a JSON schema derived from
+  `SearchFilters`. The model fills in the schema; the app turns that into a JPA Specification, so
+  it can only produce filters the query layer actually implements. Claude and Mistral are both
+  supported — Mistral has a free tier, which makes the AI path free to run.
 - **Transparent, correctable results.** Every extracted filter renders as a chip. Delete one and
   the search re-runs from the structured filters without consulting the model again.
 - **Works with no API key.** A rule-based interpreter handles free/price/day/place/theme/keyword
-  parsing. The AI layer is an upgrade, not a dependency — and if a Claude call fails at runtime,
-  the request silently falls back rather than erroring.
+  parsing. The AI layer is an upgrade, not a dependency: interpreters are tried in priority order
+  and a missing key or a failed call hands over to the next one, with the keyword rules as the
+  floor. The search box cannot return an error.
 - **34 real Helsinki museums** with coordinates, per-weekday opening hours, prices, Museum Card
   status, accessibility flags, themes and exhibitions.
 - **Map, detail pages, accounts and saved museums** (JWT, BCrypt, stateless).
@@ -52,9 +54,9 @@ sentence, and the filters get worked out for you.
 "free art museums open on Sunday near Kamppi"
         │
         ▼
-ClaudeQueryInterpreter ──(no key / API error)──► HeuristicQueryInterpreter
-        │                                                  │
-        └──────────────► SearchFilters ◄───────────────────┘
+ClaudeQueryInterpreter ──► MistralQueryInterpreter ──► HeuristicQueryInterpreter
+        │        (no key / API error)      │       (no key / API error)      │
+        └──────────────────────► SearchFilters ◄──────────────────────────────┘
                               │
         ┌─────────────────────┼──────────────────────┐
         ▼                     ▼                      ▼
@@ -96,13 +98,25 @@ Flyway creates the schema and loads all seed data on first start — no manual S
 
 ### Turning on AI search
 
+Set either key — Mistral's free tier costs nothing to run:
+
+```bash
+export MISTRAL_API_KEY=...
+```
+
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-Restart the backend. It logs which interpreter is active at startup, and `GET /api/meta` reports
-`aiSearchEnabled` so the UI can say so honestly. The model is set by `museumfinder.ai.model`
-(default `claude-opus-5`); interpretations are cached for an hour per distinct question.
+Restart the backend. With both set Claude wins; pin one with `AI_PROVIDER=claude|mistral|none`.
+`GET /api/meta` reports `aiProvider`, so the UI names the model that actually read your question
+rather than claiming AI it does not have. Models are `museumfinder.ai.model` (default
+`claude-opus-5`) and `museumfinder.ai.mistral-model` (default `mistral-small-latest`);
+interpretations are cached for an hour per distinct question.
+
+Adding a provider means one class implementing `QueryInterpreter` plus an `@Order` — the shared
+prompt lives in `SearchPrompt` and the shared JSON schema in `FilterSchema`, both generated from
+the Java enums so they cannot drift from what the query layer supports.
 
 ### Using a local PostgreSQL instead of Docker
 
@@ -116,9 +130,9 @@ psql -d postgres -c "CREATE ROLE museumfinder LOGIN PASSWORD 'museumfinder'" -c 
 cd backend && ./mvnw test
 ```
 
-22 unit tests covering the keyword interpreter, the gazetteer, filter normalisation, geo maths,
-`DATABASE_URL` parsing, and — without spending a token — that `SearchFilters` still converts to a
-valid JSON schema.
+27 unit tests covering the keyword interpreter, the gazetteer, filter normalisation, geo maths,
+`DATABASE_URL` parsing, provider selection, and — without spending a token — that `SearchFilters`
+still converts to a valid JSON schema for both providers.
 
 ## Deploying
 
@@ -142,7 +156,7 @@ wants, defaulting `sslmode=require`. Set these on the API service:
 | `DATABASE_URL` | The Postgres connection URI (use the **session** pooler, not transaction — Flyway needs session-mode) |
 | `JWT_SECRET` | `openssl rand -base64 48` |
 | `CORS_ORIGINS` | The frontend's origin, e.g. `https://your-app.vercel.app` |
-| `ANTHROPIC_API_KEY` | Optional; without it the deployed app uses the keyword interpreter |
+| `ANTHROPIC_API_KEY` or `MISTRAL_API_KEY` | Optional; without either, the deployed app uses the keyword interpreter |
 
 And on the frontend build: `VITE_API_BASE_URL` = the API's origin. For the deployed
 setup that lives in `frontend/.env.production`, so the Vercel build needs no dashboard config.
@@ -178,7 +192,7 @@ curl -s localhost:8080/api/search -H 'Content-Type: application/json' \
 backend/src/main/java/com/museumfinder/
   domain/    Museum, Exhibition, OpeningHour, Theme, AppUser, Favorite
   repo/      Spring Data repositories (+ the full-text candidate query)
-  search/    SearchFilters, the two interpreters, specifications, gazetteer, service
+  search/    SearchFilters, the three interpreters, specifications, gazetteer, service
   security/  JWT issue/parse, filter, stateless config
   web/       Controllers and DTOs
 backend/src/main/resources/db/migration/   V1 schema, V2-V4 seed data
@@ -192,7 +206,9 @@ frontend/src/
 
 | Variable | Default | Notes |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | — | Unset means keyword-only search |
+| `ANTHROPIC_API_KEY` | — | Enables Claude interpretation |
+| `MISTRAL_API_KEY` | — | Enables Mistral interpretation (free tier); unset both for keyword-only |
+| `AI_PROVIDER` | `auto` | Pin to `claude`, `mistral` or `none` |
 | `AI_SEARCH_ENABLED` | `true` | Force the fallback interpreter |
 | `DB_URL` / `DB_USER` / `DB_PASSWORD` | localhost / museumfinder / museumfinder | |
 | `JWT_SECRET` | dev placeholder | **Set this in any real deployment** (32+ chars) |

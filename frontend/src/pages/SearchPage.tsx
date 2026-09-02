@@ -110,6 +110,7 @@ export default function SearchPage() {
           loading={loading}
           examples={meta?.examples ?? []}
           aiEnabled={meta?.aiSearchEnabled ?? false}
+          provider={meta?.aiProvider}
         />
       </Box>
 
@@ -122,7 +123,13 @@ export default function SearchPage() {
         >
           {response.filters.interpretation}
           <Typography variant="caption" component="div" color="text.secondary">
-            Read by {response.interpretedBy === 'claude' ? 'Claude' : 'the built-in keyword rules'} · remove a chip below to change it
+            Read by{' '}
+            {response.interpretedBy === 'claude'
+              ? 'Claude'
+              : response.interpretedBy === 'mistral'
+                ? 'Mistral'
+                : 'the built-in keyword rules'}{' '}
+            · remove a chip below to change it
           </Typography>
         </Alert>
       )}

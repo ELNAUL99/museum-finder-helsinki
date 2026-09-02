@@ -8,10 +8,8 @@ import com.museumfinder.domain.Theme;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 /**
  * Reads a visitor's sentence and returns the structured filters behind it, using the
@@ -23,18 +21,17 @@ import java.util.stream.Collectors;
  * and {@link SearchService} silently uses the keyword interpreter instead.
  */
 @Component
+@Order(10)
 public class ClaudeQueryInterpreter implements QueryInterpreter {
 
     private static final Logger log = LoggerFactory.getLogger(ClaudeQueryInterpreter.class);
 
     private final AiProperties properties;
     private final AnthropicClient client;
-    private final String systemPrompt;
 
     public ClaudeQueryInterpreter(AiProperties properties) {
         this.properties = properties;
         this.client = createClient(properties);
-        this.systemPrompt = buildSystemPrompt();
         if (client == null) {
             log.info("Claude query interpretation is off (no API key found). Falling back to keyword search.");
         } else {
@@ -60,8 +57,9 @@ public class ClaudeQueryInterpreter implements QueryInterpreter {
         }
     }
 
+    @Override
     public boolean isAvailable() {
-        return client != null;
+        return client != null && properties.allows(id());
     }
 
     @Override
@@ -79,7 +77,7 @@ public class ClaudeQueryInterpreter implements QueryInterpreter {
         StructuredMessageCreateParams<SearchFilters> params = MessageCreateParams.builder()
                 .model(properties.model())
                 .maxTokens(properties.maxTokens())
-                .system(systemPrompt)
+                .system(SearchPrompt.SYSTEM)
                 .outputConfig(SearchFilters.class)
                 .addUserMessage(naturalLanguageQuery)
                 .build();
@@ -96,27 +94,4 @@ public class ClaudeQueryInterpreter implements QueryInterpreter {
                 : normalized;
     }
 
-    private static String buildSystemPrompt() {
-        String themes = Arrays.stream(Theme.values()).map(Enum::name).collect(Collectors.joining(", "));
-        String places = String.join(", ", HelsinkiPlaces.names());
-        return """
-                You convert a visitor's question into filters for a Helsinki museum search engine.
-                The catalogue covers museums inside Helsinki only - about thirty of them, from the
-                Ateneum and Kiasma to small free house museums and the Suomenlinna island museums.
-
-                Available themes: %s
-                Known districts and landmarks: %s
-
-                Rules:
-                - Set a filter only when the visitor's words support it. Everything else keeps its neutral default.
-                - Prefer themes over keywords. Use keywords only for specific proper nouns or objects the themes
-                  cannot express, such as "Aalto", "dinosaur", "tram", "Schjerfbeck".
-                - nearPlace must be one of the known districts or landmarks, or an empty string.
-                - Treat "cheap" as maxPriceEur 12, and "free" as freeOnly rather than a price of 0.
-                - "Rainy day", "indoors" and similar do not map to any filter - leave them out rather than guessing.
-                - Choose DISTANCE sort when the visitor asks for something nearby, PRICE_ASC when they lead with
-                  money, otherwise RELEVANCE.
-                - Write interpretation as one short sentence addressed to the visitor, describing the filters you set.
-                """.formatted(themes, places);
-    }
 }

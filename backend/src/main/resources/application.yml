@@ -37,9 +37,13 @@ museumfinder:
     ttl-minutes: 10080
   ai:
     enabled: ${AI_SEARCH_ENABLED:true}
-    # Leave blank to use the ANTHROPIC_API_KEY environment variable.
+    # auto picks the best provider whose key is present; or pin one: claude, mistral, none.
+    provider: ${AI_PROVIDER:auto}
+    # Leave blank to use the ANTHROPIC_API_KEY / MISTRAL_API_KEY environment variables.
     api-key: ${ANTHROPIC_API_KEY:}
     model: claude-opus-5
+    mistral-api-key: ${MISTRAL_API_KEY:}
+    mistral-model: mistral-small-latest
     max-tokens: 2048
 
 logging:

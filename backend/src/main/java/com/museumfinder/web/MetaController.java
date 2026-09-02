@@ -1,8 +1,8 @@
 package com.museumfinder.web;
 
 import com.museumfinder.domain.Theme;
-import com.museumfinder.search.ClaudeQueryInterpreter;
 import com.museumfinder.search.HelsinkiPlaces;
+import com.museumfinder.search.QueryInterpreter;
 import com.museumfinder.web.dto.ThemeDto;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,21 +16,33 @@ import java.util.List;
 @RequestMapping("/api")
 public class MetaController {
 
-    private final ClaudeQueryInterpreter claude;
+    private final List<QueryInterpreter> interpreters;
 
-    public MetaController(ClaudeQueryInterpreter claude) {
-        this.claude = claude;
+    public MetaController(List<QueryInterpreter> interpreters) {
+        this.interpreters = interpreters;
     }
 
-    public record Meta(List<ThemeDto> themes, List<String> places, boolean aiSearchEnabled, List<String> examples) {
+    /**
+     * @param aiProvider which interpreter will read the next question - {@code claude},
+     *                   {@code mistral} or {@code keyword} - so the UI can say so honestly
+     */
+    public record Meta(List<ThemeDto> themes, List<String> places, boolean aiSearchEnabled,
+                       String aiProvider, List<String> examples) {
     }
 
     @GetMapping("/meta")
     public Meta meta() {
+        String provider = interpreters.stream()
+                .filter(QueryInterpreter::isAvailable)
+                .map(QueryInterpreter::id)
+                .findFirst()
+                .orElse("keyword");
+
         return new Meta(
                 Arrays.stream(Theme.values()).map(ThemeDto::of).toList(),
                 HelsinkiPlaces.names(),
-                claude.isAvailable(),
+                !provider.equals("keyword"),
+                provider,
                 List.of(
                         "free art museums open on Sunday near Kamppi",
                         "somewhere with dinosaurs for a 6-year-old",

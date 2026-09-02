@@ -10,15 +10,21 @@ import CircularProgress from '@mui/material/CircularProgress';
 import SearchIcon from '@mui/icons-material/Search';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
+const PROVIDER_LABELS: Record<string, string> = {
+  claude: 'Claude',
+  mistral: 'Mistral',
+};
+
 interface Props {
   onSearch: (question: string) => void;
   loading: boolean;
   examples: string[];
   aiEnabled: boolean;
+  provider?: string;
   initialValue?: string;
 }
 
-export default function SearchBar({ onSearch, loading, examples, aiEnabled, initialValue = '' }: Props) {
+export default function SearchBar({ onSearch, loading, examples, aiEnabled, provider, initialValue = '' }: Props) {
   const [value, setValue] = useState(initialValue);
 
   const submit = (event?: React.FormEvent) => {
@@ -60,7 +66,7 @@ export default function SearchBar({ onSearch, loading, examples, aiEnabled, init
         {aiEnabled && (
           <Chip
             icon={<AutoAwesomeIcon />}
-            label="AI search on"
+            label={`AI search · ${PROVIDER_LABELS[provider ?? ''] ?? 'on'}`}
             size="small"
             color="secondary"
             variant="outlined"
@@ -82,7 +88,7 @@ export default function SearchBar({ onSearch, loading, examples, aiEnabled, init
       </Stack>
       {!aiEnabled && (
         <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-          Running without an Anthropic API key - queries are parsed by the built-in keyword rules.
+          No AI key configured - queries are parsed by the built-in keyword rules.
         </Typography>
       )}
     </Box>

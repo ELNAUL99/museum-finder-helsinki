@@ -29,16 +29,20 @@ public class SearchService {
 
     private final MuseumRepository museums;
     private final MuseumMapper mapper;
-    private final ClaudeQueryInterpreter claude;
-    private final HeuristicQueryInterpreter heuristic;
+    private final List<QueryInterpreter> interpreters;
+    private final QueryInterpreter fallback;
     private final Clock clock;
 
-    public SearchService(MuseumRepository museums, MuseumMapper mapper, ClaudeQueryInterpreter claude,
+    /**
+     * @param interpreters every interpreter, injected in {@code @Order} priority: the AI
+     *                     providers first, the keyword rules last
+     */
+    public SearchService(MuseumRepository museums, MuseumMapper mapper, List<QueryInterpreter> interpreters,
                          HeuristicQueryInterpreter heuristic, Clock clock) {
         this.museums = museums;
         this.mapper = mapper;
-        this.claude = claude;
-        this.heuristic = heuristic;
+        this.interpreters = interpreters;
+        this.fallback = heuristic;
         this.clock = clock;
     }
 
@@ -47,21 +51,20 @@ public class SearchService {
         if (question == null || question.isBlank()) {
             return search(SearchFilters.empty(), "", "filters", favoriteIds);
         }
-        String interpretedBy = heuristic.id();
-        SearchFilters filters;
-        if (claude.isAvailable()) {
-            try {
-                filters = claude.interpret(question);
-                interpretedBy = claude.id();
-            } catch (RuntimeException e) {
-                log.warn("Claude interpretation failed for \"{}\" ({}); using keyword fallback.",
-                        question, e.getMessage());
-                filters = heuristic.interpret(question);
+        // Walk the providers in priority order; a provider that is missing credentials or
+        // fails outright hands over to the next one, and the keyword rules are the floor.
+        for (QueryInterpreter interpreter : interpreters) {
+            if (!interpreter.isAvailable()) {
+                continue;
             }
-        } else {
-            filters = heuristic.interpret(question);
+            try {
+                return search(interpreter.interpret(question), question, interpreter.id(), favoriteIds);
+            } catch (RuntimeException e) {
+                log.warn("{} interpretation failed for \"{}\" ({}); trying the next interpreter.",
+                        interpreter.id(), question, e.getMessage());
+            }
         }
-        return search(filters, question, interpretedBy, favoriteIds);
+        return search(fallback.interpret(question), question, fallback.id(), favoriteIds);
     }
 
     @Transactional(readOnly = true)

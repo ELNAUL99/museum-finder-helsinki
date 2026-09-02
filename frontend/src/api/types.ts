@@ -85,16 +85,19 @@ export interface SearchFilters {
 export interface SearchResponse {
   query: string;
   filters: SearchFilters;
-  interpretedBy: 'claude' | 'keyword' | 'filters';
+  interpretedBy: AiProvider | 'filters';
   total: number;
   results: MuseumSummary[];
   note?: string;
 }
 
+export type AiProvider = 'claude' | 'mistral' | 'keyword';
+
 export interface Meta {
   themes: ThemeDto[];
   places: string[];
   aiSearchEnabled: boolean;
+  aiProvider: AiProvider;
   examples: string[];
 }
 
