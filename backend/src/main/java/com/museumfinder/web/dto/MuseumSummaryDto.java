@@ -11,6 +11,8 @@ public record MuseumSummaryDto(
         String district,
         String address,
         String imageUrl,
+        String imageUrlLarge,
+        ImageCreditDto imageCredit,
         BigDecimal adultPriceEur,
         boolean freeEntry,
         String freeEntryNote,

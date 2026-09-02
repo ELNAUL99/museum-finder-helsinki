@@ -55,6 +55,24 @@ public class Museum {
     @Column(name = "image_url")
     private String imageUrl;
 
+    /** Larger variant of {@link #imageUrl}, used for the detail page hero. */
+    @Column(name = "image_url_large")
+    private String imageUrlLarge;
+
+    /** Attribution for the photograph. Most Commons imagery is CC BY-SA, so the
+     *  credit travels with the image everywhere it is shown. */
+    @Column(name = "image_credit")
+    private String imageCredit;
+
+    @Column(name = "image_license")
+    private String imageLicense;
+
+    @Column(name = "image_license_url")
+    private String imageLicenseUrl;
+
+    @Column(name = "image_source_url")
+    private String imageSourceUrl;
+
     @Column(name = "adult_price_eur", nullable = false)
     private BigDecimal adultPriceEur = BigDecimal.ZERO;
 

@@ -3,6 +3,13 @@ export interface ThemeDto {
   label: string;
 }
 
+export interface ImageCredit {
+  photographer: string;
+  license: string;
+  licenseUrl?: string;
+  sourceUrl?: string;
+}
+
 export interface MuseumSummary {
   id: number;
   slug: string;
@@ -11,6 +18,8 @@ export interface MuseumSummary {
   district: string;
   address: string;
   imageUrl?: string;
+  imageUrlLarge?: string;
+  imageCredit?: ImageCredit;
   adultPriceEur: number;
   freeEntry: boolean;
   freeEntryNote?: string;
@@ -44,6 +53,8 @@ export interface Exhibition {
   startDate: string;
   endDate?: string;
   imageUrl?: string;
+  imageUrlLarge?: string;
+  imageCredit?: ImageCredit;
   permanent: boolean;
   running: boolean;
 }

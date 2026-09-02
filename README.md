@@ -234,10 +234,16 @@ The 34 museums are real, and so are their addresses, districts and coordinates. 
 opening hours are realistic 2025-era approximations, not a live feed** — treat them as demo data
 and check the museum's own site before travelling.
 
-There is no photography. Stock images of the wrong buildings are worse than none, so `image_url`
-is seeded `NULL` and the frontend draws a generated cover instead: a palette and monogram derived
-from the museum's slug, stable across visits. Fill `image_url` with licensed photography and the
-cover is replaced automatically, no code change needed.
+Photography comes from Wikimedia Commons and shows the actual buildings. Each museum was resolved
+through its Wikidata item (P18), and a candidate was accepted only when the item's own coordinates
+fall within 30 km of Helsinki — so a same-named museum elsewhere cannot slip in. 33 of the 34
+matched; the one that did not keeps the generated cover, a palette and monogram derived from its
+slug, which is also what any future museum gets until a photo exists.
+
+Most of these images are CC BY-SA, which requires naming the photographer and licence wherever the
+picture appears, so the credit is stored beside the URL and rendered on both the cards and the
+detail page rather than buried in a colophon. Both the card and hero URLs come from the Commons
+API: the CDN rejects thumbnail paths it did not mint itself, so hand-editing a width returns 400.
 
 The natural next step would be pulling live data from the
 [MyHelsinki Open API](https://open-api.myhelsinki.fi/) or Helsinki's

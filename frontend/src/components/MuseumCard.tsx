@@ -51,7 +51,39 @@ export default function MuseumCard({ museum, onToggleFavorite }: Props) {
         sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
       >
         {museum.imageUrl ? (
-          <CardMedia component="img" height="170" image={museum.imageUrl} alt="" sx={{ objectFit: 'cover' }} />
+          <Box sx={{ position: 'relative' }}>
+            <CardMedia
+              component="img"
+              height="170"
+              image={museum.imageUrl}
+              alt=""
+              loading="lazy"
+              sx={{ objectFit: 'cover', bgcolor: 'grey.200' }}
+            />
+            {museum.imageCredit && (
+              // CC BY-SA wants the photographer named wherever the photo appears,
+              // so the credit rides on the card too, quietly.
+              <Typography
+                sx={{
+                  position: 'absolute',
+                  right: 6,
+                  bottom: 4,
+                  px: 0.75,
+                  fontSize: 10,
+                  lineHeight: 1.6,
+                  color: 'rgba(255,255,255,.92)',
+                  bgcolor: 'rgba(0,0,0,.42)',
+                  borderRadius: 1,
+                  maxWidth: '85%',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {museum.imageCredit.photographer} · {museum.imageCredit.license}
+              </Typography>
+            )}
+          </Box>
         ) : (
           <MuseumCover museum={museum} />
         )}

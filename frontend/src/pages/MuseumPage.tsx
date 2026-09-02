@@ -87,7 +87,7 @@ export default function MuseumPage() {
             <Box
               sx={{
                 height: '100%',
-                backgroundImage: `url(${m.imageUrl})`,
+                backgroundImage: `url(${m.imageUrlLarge ?? m.imageUrl})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
               }}
@@ -96,6 +96,36 @@ export default function MuseumPage() {
             <MuseumCover museum={m} height="100%" />
           )}
           <Box sx={{ position: 'absolute', inset: 0, bgcolor: 'rgba(10,35,64,.45)' }} />
+          {m.imageCredit && (
+            <Typography
+              sx={{
+                position: 'absolute',
+                right: 10,
+                bottom: 6,
+                fontSize: 11,
+                color: 'rgba(255,255,255,.8)',
+                '& a': { color: 'inherit', textDecoration: 'underline' },
+              }}
+            >
+              Photo:{' '}
+              {m.imageCredit.sourceUrl ? (
+                <a href={m.imageCredit.sourceUrl} target="_blank" rel="noreferrer">
+                  {m.imageCredit.photographer}
+                </a>
+              ) : (
+                m.imageCredit.photographer
+              )}{' '}
+              ·{' '}
+              {m.imageCredit.licenseUrl ? (
+                <a href={m.imageCredit.licenseUrl} target="_blank" rel="noreferrer">
+                  {m.imageCredit.license}
+                </a>
+              ) : (
+                m.imageCredit.license
+              )}{' '}
+              via Wikimedia Commons
+            </Typography>
+          )}
         </Box>
         <Container maxWidth="lg" sx={{ pb: 3, position: 'relative' }}>
           <Button component={RouterLink} to="/" startIcon={<ArrowBackIcon />} sx={{ color: '#fff', mb: 1 }}>

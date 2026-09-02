@@ -5,6 +5,7 @@ import com.museumfinder.domain.Museum;
 import com.museumfinder.domain.OpeningHour;
 import com.museumfinder.web.dto.DayHoursDto;
 import com.museumfinder.web.dto.ExhibitionDto;
+import com.museumfinder.web.dto.ImageCreditDto;
 import com.museumfinder.web.dto.MuseumDetailDto;
 import com.museumfinder.web.dto.MuseumSummaryDto;
 import com.museumfinder.web.dto.ThemeDto;
@@ -44,6 +45,8 @@ public class MuseumMapper {
                 museum.getDistrict(),
                 museum.getAddress(),
                 museum.getImageUrl(),
+                museum.getImageUrlLarge(),
+                ImageCreditDto.of(museum),
                 museum.getAdultPriceEur(),
                 museum.isFreeEntry(),
                 museum.getFreeEntryNote(),
