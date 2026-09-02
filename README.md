@@ -116,8 +116,37 @@ psql -d postgres -c "CREATE ROLE museumfinder LOGIN PASSWORD 'museumfinder'" -c 
 cd backend && ./mvnw test
 ```
 
-17 unit tests covering the keyword interpreter, the gazetteer, filter normalisation, geo maths,
-and — without spending a token — that `SearchFilters` still converts to a valid JSON schema.
+22 unit tests covering the keyword interpreter, the gazetteer, filter normalisation, geo maths,
+`DATABASE_URL` parsing, and — without spending a token — that `SearchFilters` still converts to a
+valid JSON schema.
+
+## Deploying
+
+The backend ships as a Docker image (`backend/Dockerfile`, multi-stage: Maven build → Temurin
+JRE), so it runs anywhere that takes a container. The frontend is a static bundle.
+
+The deployed setup is a free-tier stack:
+
+| Piece | Where | Notes |
+|---|---|---|
+| Database | Supabase (`eu-north-1`) | Free tier; pauses after a week of no traffic |
+| API | Render web service, Docker, Frankfurt | Free instance sleeps after 15 min idle |
+| Frontend | Vercel | Free, CDN-backed |
+
+Any host that supplies a `DATABASE_URL` works without code changes: `DatabaseUrl` translates the
+`postgres://user:pass@host:port/db` URI form into the JDBC URL, username and password Spring
+wants, defaulting `sslmode=require`. Set these on the API service:
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | The Postgres connection URI (use the **session** pooler, not transaction — Flyway needs session-mode) |
+| `JWT_SECRET` | `openssl rand -base64 48` |
+| `CORS_ORIGINS` | The frontend's origin, e.g. `https://your-app.vercel.app` |
+| `ANTHROPIC_API_KEY` | Optional; without it the deployed app uses the keyword interpreter |
+
+And on the frontend build: `VITE_API_BASE_URL` = the API's origin.
+
+Flyway runs the migrations on first boot, so a fresh database seeds itself.
 
 ## API
 
