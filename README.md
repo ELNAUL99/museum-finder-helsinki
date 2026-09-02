@@ -149,6 +149,11 @@ setup that lives in `frontend/.env.production`, so the Vercel build needs no das
 
 Flyway runs the migrations on first boot, so a fresh database seeds itself.
 
+No secret belongs in this repo. `.gitignore` blocks `.env*`, `*.pem`, `*.key`, keystores and
+`*credentials*.json`; the only committed env files are the `.env.example` templates and
+`frontend/.env.production`, which holds a public API URL and nothing else. Real values go in the
+host's environment settings.
+
 ## API
 
 | Method | Path | Auth | Purpose |

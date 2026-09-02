@@ -8,10 +8,24 @@ node_modules/
 dist/
 .vite/
 
-# Environment
+# Secrets - never commit real values. Anything matching these stays out of the
+# repo; the two deliberate exceptions are the .env.example templates (empty
+# values) and frontend/.env.production (a public API URL, not a credential).
 .env
-.env.local
+.env.*
+!.env.example
+!.env.production
 *.local
+
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+secrets.json
+*credentials*.json
+service-account*.json
 
 # Editors / OS
 .idea/
