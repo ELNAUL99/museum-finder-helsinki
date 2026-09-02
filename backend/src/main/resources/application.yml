@@ -9,10 +9,11 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
-    properties:
-      hibernate:
-        jdbc:
-          time_zone: Europe/Helsinki
+    # Deliberately no hibernate.jdbc.time_zone. Opening hours are wall-clock LocalTimes
+    # with no zone of their own - 11:00 means 11:00 on the museum's door. Setting a JDBC
+    # time zone makes the driver shift them by the server's offset, which silently moved
+    # every museum's hours by two hours once the app ran in a UTC container. "Now" is
+    # handled where it belongs instead: the Clock bean in AppConfig is Europe/Helsinki.
   flyway:
     enabled: true
     locations: classpath:db/migration
