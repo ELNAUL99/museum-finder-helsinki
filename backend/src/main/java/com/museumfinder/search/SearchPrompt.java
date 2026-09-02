@@ -35,6 +35,22 @@ final class SearchPrompt {
                   money, otherwise RELEVANCE.
                 - Use -1 for maxPriceEur and 0 for radiusKm when the visitor gave no budget or no radius.
                 - Write interpretation as one short sentence addressed to the visitor, describing the filters you set.
+
+                Set every constraint the sentence contains, not just the most obvious one. Worked examples:
+
+                "free art museums open on Sunday near Kamppi"
+                  -> themes [ART], freeOnly true, openOn SUNDAY, nearPlace "Kamppi", sort DISTANCE
+                  (three separate constraints plus the place - dropping freeOnly would be wrong)
+
+                "somewhere with dinosaurs for my 6 year old"
+                  -> themes [NATURAL_HISTORY], familyFriendly true, keywords ["dinosaur"]
+                  (the child makes it familyFriendly; the subject is natural history, not CHILDREN)
+
+                "design museums under 15 euros with a cafe"
+                  -> themes [DESIGN], maxPriceEur 15, hasCafe true
+
+                "what's open right now"
+                  -> openNow true, openOn TODAY, nothing else
                 """.formatted(themes, places);
     }
 }
